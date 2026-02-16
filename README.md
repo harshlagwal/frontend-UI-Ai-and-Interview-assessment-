@@ -41,7 +41,11 @@ frontend-assessment/
 ### 2. Database Setup
 1. Open your PostgreSQL terminal or tool (like pgAdmin).
 2. Create the database: `CREATE DATABASE interview_db;`.
-3. The server will automatically initialize tables (users, feedback) on its first run.
+3. Import the provided schema:
+   ```bash
+   psql -U your_postgres_user -d interview_db -f interview_db_final_structure.sql
+   ```
+   *The server will also automatically initialize basic tables (users, feedback) if the file is not imported.*
 
 ### 3. Backend Configuration
 1. Navigate to the server directory:
