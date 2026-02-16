@@ -1,73 +1,54 @@
-# React + TypeScript + Vite
+# Premium Interview & Assessment Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A high-performance, secure, and professional frontend assessment platform designed for recruiters and candidates. This project simulates a real-world interview environment with enhanced security features and WebRTC capabilities.
 
-Currently, two official plugins are available:
+## 🚀 The Task
+The goal was to build a secure, Google Meet-style interview dashboard that ensures integrity during remote assessments. This involves managing media streams, preventing unauthorized user actions, and providing a premium user experience with both light and dark modes.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Key Features
+- **WebRTC Integration**: Seamless camera and microphone management using singleton patterns for stability.
+- **Secure Screen Sharing**: Controlled screen sharing that automatically re-enforces fullscreen mode.
+- **Security & Integrity**:
+  - **Fullscreen Enforcement**: Detects and logs when a user exits fullscreen.
+  - **Tab/Window Detection**: Monitors visibility changes and focus loss to prevent cheating.
+  - **Multi-Tab Prevention**: Uses `BroadcastChannel` to ensure only one active session exists.
+  - **Hotkey Blocking**: Restricts developer tools (F12) and common keyboard shortcuts.
+- **Premium Design**:
+  - **Dynamic Theme Support**: Toggle between sleek Dark Mode and high-contrast Light Mode.
+  - **Glassmorphic UI**: Modern aesthetic with Lucide-React icons and smooth animations (Tailwind CSS 4.0).
+  - **Responsive Layout**: Designed to work across different screen sizes with a focus on usability.
 
-## React Compiler
+## 🛠️ How to Run the Project
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Follow these steps to set up and run the project locally:
 
-## Expanding the ESLint configuration
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/harshlagwal/frontend-UI-Ai-and-Interview-assessment-.git
+   cd frontend-assessment
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+2. **Install Dependencies**:
+   ```bash
+   npm install
+   ```
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+3. **Start the Development Server**:
+   ```bash
+   npm run dev
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+4. **Build for Production**:
+   ```bash
+   npm run build
+   ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 📧 Contact Information
+- **Portfolio/GitHub**: [harshlagwal](https://github.com/harshlagwal)
+- **Gmail**: [harshlagwal123@gmail.com](mailto:harshlagwal123@gmail.com)
+- **Project Link**: [GitHub Repository](https://github.com/harshlagwal/frontend-UI-Ai-and-Interview-assessment-)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+*Built with ❤️ using React, TypeScript, and Vite.*
