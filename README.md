@@ -1,47 +1,105 @@
-# Premium Interview & Assessment Dashboard
+# Professional Interview & Assessment Platform
 
-A high-performance, secure, and professional frontend assessment platform designed for recruiters and candidates. This project simulates a real-world interview environment with enhanced security features and WebRTC capabilities.
+This repository contains a full-stack assessment platform featuring a secure, Google Meet-style interview dashboard with WebRTC integration, real-time security monitoring, and a professional dark/light themed UI.
 
-## 🚀 The Task
-The goal was to build a secure, Google Meet-style interview dashboard that ensures integrity during remote assessments. This involves managing media streams, preventing unauthorized user actions, and providing a premium user experience with both light and dark modes.
+## 🌟 Key Features
 
-## ✨ Key Features
-- **WebRTC Integration**: Seamless camera and microphone management using singleton patterns for stability.
-- **Secure Screen Sharing**: Controlled screen sharing that automatically re-enforces fullscreen mode.
-- **Security & Integrity**:
-  - **Fullscreen Enforcement**: Detects and logs when a user exits fullscreen.
-  - **Tab/Window Detection**: Monitors visibility changes and focus loss to prevent cheating.
-  - **Multi-Tab Prevention**: Uses `BroadcastChannel` to ensure only one active session exists.
-  - **Hotkey Blocking**: Restricts developer tools (F12) and common keyboard shortcuts.
-- **Premium Design**:
-  - **Dynamic Theme Support**: Toggle between sleek Dark Mode and high-contrast Light Mode.
-  - **Glassmorphic UI**: Modern aesthetic with Lucide-React icons and smooth animations (Tailwind CSS 4.0).
-  - **Responsive Layout**: Designed to work across different screen sizes with a focus on usability.
+- **WebRTC Video/Audio**: Stable singleton-based media stream management.
+- **Secure Environment**:
+  - Fullscreen enforcement and violation tracking.
+  - Tab switch and focus loss detection.
+  - Development tools (F12) and hotkey blocking.
+  - Multi-tab prevention via `BroadcastChannel`.
+- **Professional Dashboard**: Opaque, high-contrast UI for clear data presentation.
+- **Full Authentication**: Secure Login and Signup flow with JWT.
+- **Dynamic Theming**: Smooth transition between premium Light and Dark modes.
 
-## 🛠️ How to Run the Project
+---
 
-Follow these steps to set up and run the project locally:
+## 🏗️ Project Structure
 
-1. **Clone the Repository**:
+```text
+frontend-assessment/
+├── server/            # Backend Node.js/Express API
+│   ├── auth.js        # Authentication logic (JWT)
+│   ├── db.js          # Database connection & schema init
+│   └── index.js       # Main server entry point
+├── src/               # Frontend React/Vite source
+│   ├── components/    # Reusable UI components (Auth, Dashboard, etc.)
+│   └── services/      # API communication services
+└── public/            # Static assets
+```
+
+---
+
+## 🛠️ Installation & Setup
+
+### 1. Prerequisites
+- **Node.js**: v18 or later
+- **PostgreSQL**: A running instance with a database named `interview_db`
+
+### 2. Database Setup
+1. Open your PostgreSQL terminal or tool (like pgAdmin).
+2. Create the database: `CREATE DATABASE interview_db;`.
+3. The server will automatically initialize tables (users, feedback) on its first run.
+
+### 3. Backend Configuration
+1. Navigate to the server directory:
    ```bash
-   git clone https://github.com/harshlagwal/frontend-UI-Ai-and-Interview-assessment-.git
-   cd frontend-assessment
+   cd server
    ```
-
-2. **Install Dependencies**:
+2. Create a `.env` file (refer to `.env.example` in the server folder):
+   ```env
+   DB_USER=your_postgres_user
+   DB_PASSWORD=your_postgres_password
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=interview_db
+   JWT_SECRET=your_super_secret_key
+   PORT=5000
+   ```
+3. Install dependencies:
    ```bash
    npm install
    ```
 
-3. **Start the Development Server**:
+### 4. Frontend Configuration
+1. Navigate to the root folder:
    ```bash
-   npm run dev
+   cd ..
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
    ```
 
-4. **Build for Production**:
-   ```bash
-   npm run build
-   ```
+---
+
+## 🚀 Running the Application
+
+You need to run **both** the backend and the frontend simultaneously in two different terminals.
+
+### Start the Backend
+```bash
+cd server
+npm start
+```
+*The server will run on `http://localhost:5000`*
+
+### Start the Frontend
+Open a **new terminal** window:
+```bash
+# From the root directory (frontend-assessment)
+npm run dev
+```
+*The app will run on `http://localhost:5173` (or the next available port)*
+
+---
+
+## 💻 Tech Stack
+- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Lucide Icons.
+- **Backend**: Node.js, Express, JWT, Bcrypt.
+- **Database**: PostgreSQL.
 
 ---
 
@@ -51,4 +109,4 @@ Follow these steps to set up and run the project locally:
 - **Project Link**: [GitHub Repository](https://github.com/harshlagwal/frontend-UI-Ai-and-Interview-assessment-)
 
 ---
-*Built with ❤️ using React, TypeScript, and Vite.*
+*Built for excellence in engineering and assessment.*

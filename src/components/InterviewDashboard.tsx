@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Camera, CameraOff, Mic, MicOff, PhoneOff, User, AlertCircle, Sun, Moon, Monitor, MonitorOff } from 'lucide-react';
+import { Camera, CameraOff, Mic, MicOff, PhoneOff, User, AlertCircle, Monitor, MonitorOff } from 'lucide-react';
 
 /**
  * Premium Interview Dashboard - Google Meet Style
@@ -24,25 +24,6 @@ export default function InterviewDashboard() {
     const isRequestingScreenRef = useRef(false);
     const hasRequestedRef = useRef(false);
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-        if (typeof window !== 'undefined') {
-            return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
-        }
-        return 'dark';
-    });
-
-    /**
-     * Theme Effect
-     */
-    useEffect(() => {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-    }, [theme]);
-
-    const toggleTheme = () => {
-        setTheme(prev => prev === 'light' ? 'dark' : 'light');
-    };
-
 
     /**
      * Media Management - Singleton Pattern
@@ -366,20 +347,6 @@ export default function InterviewDashboard() {
 
     // --- COMPONENTS ---
 
-    const ThemeToggle = () => (
-        <button
-            onClick={toggleTheme}
-            className={`fixed top-5 right-5 z-[100] p-2.5 rounded-full bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:bg-indigo-500/10 hover:border-indigo-500/30 transition-all duration-300 group shadow-lg backdrop-blur-md active:scale-90 ${!isSecured ? 'opacity-50 pointer-events-none' : ''}`}
-            aria-label="Toggle theme"
-        >
-            {theme === 'light' ? (
-                <Moon className="w-4 h-4 text-indigo-600" />
-            ) : (
-                <Sun className="w-4 h-4 text-amber-400" />
-            )}
-        </button>
-    );
-
     // --- SECURITY OVERLAY ---
     const SecurityOverlay = () => {
         if (!isSecured && phase === 'live') {
@@ -465,8 +432,7 @@ export default function InterviewDashboard() {
 
     // --- FINAL RENDER ---
     return (
-        <>
-            <ThemeToggle />
+        <div className="min-h-screen bg-[var(--bg-primary)]">
             <SecurityOverlay />
 
             {phase === 'loading' && (
@@ -505,9 +471,8 @@ export default function InterviewDashboard() {
             )}
 
             {phase === 'live' && (
-                <div className="relative w-full h-screen flex flex-col p-6 animate-fade-in overflow-hidden items-center justify-center">
-                    {/* Main Video Viewport */}
-                    <div className="relative z-10 flex flex-col items-center gap-8">
+                <div className="h-screen w-full bg-[var(--bg-primary)] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+                    <div className="flex flex-col items-center gap-8 w-full max-w-5xl z-10">
                         <div className={`video-surface shadow-2xl ${isCameraOn ? 'active' : ''}`}>
                             <video
                                 ref={videoRef}
@@ -532,6 +497,7 @@ export default function InterviewDashboard() {
                                 onClick={toggleCamera}
                                 className={`meet-btn ${!isCameraOn ? 'off' : ''}`}
                                 aria-label="Toggle camera"
+                                data-tip={isCameraOn ? "Turn off camera" : "Turn on camera"}
                             >
                                 {isCameraOn ? <Camera size={20} strokeWidth={2.5} /> : <CameraOff size={20} strokeWidth={2.5} />}
                             </button>
@@ -540,6 +506,7 @@ export default function InterviewDashboard() {
                                 onClick={toggleMic}
                                 className={`meet-btn ${!isMicOn ? 'off' : ''}`}
                                 aria-label="Toggle microphone"
+                                data-tip={isMicOn ? "Mute microphone" : "Unmute microphone"}
                             >
                                 {isMicOn ? <Mic size={20} strokeWidth={2.5} /> : <MicOff size={20} strokeWidth={2.5} />}
                             </button>
@@ -557,6 +524,7 @@ export default function InterviewDashboard() {
                                 onClick={handleEndInterview}
                                 className="meet-btn danger"
                                 aria-label="End call"
+                                data-tip="End call"
                             >
                                 <PhoneOff size={24} strokeWidth={2.5} />
                             </button>
@@ -564,6 +532,6 @@ export default function InterviewDashboard() {
                     </div>
                 </div>
             )}
-        </>
+        </div>
     );
 }
