@@ -20,12 +20,18 @@ export const authService = {
             body: JSON.stringify({ email, password }),
         });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Login failed');
+        let data;
+        const text = await response.text();
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (e) {
+            throw new Error('Invalid server response');
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Login failed');
+        }
+
         localStorage.setItem('jwt', data.token);
         return data;
     },
@@ -42,12 +48,18 @@ export const authService = {
             body: JSON.stringify(userData),
         });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Signup failed');
+        let data;
+        const text = await response.text();
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (e) {
+            throw new Error('Invalid server response');
         }
 
-        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.message || 'Signup failed');
+        }
+
         localStorage.setItem('jwt', data.token);
         return data;
     },

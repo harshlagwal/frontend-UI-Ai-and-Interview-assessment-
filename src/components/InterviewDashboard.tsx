@@ -1,33 +1,74 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { Camera, CameraOff, Mic, MicOff, PhoneOff, User, AlertCircle, Monitor, MonitorOff } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import {
+    Outlet, useNavigate, useLocation
+} from 'react-router-dom';
+import {
+    AlertCircle, ShieldAlert, AlertTriangle
+} from 'lucide-react';
+import Draggable from 'react-draggable';
+import AssessmentLayout from '../assessment/AssessmentLayout';
 
 /**
- * Premium Interview Dashboard - Google Meet Style
+ * ProctoringPanel - Isolated component for better drag performance
+ * Uses React.memo and individual refs to prevent dashboard-wide re-renders
+ */
+const ProctoringPanel = React.memo(({ stream, nodeRef }: { stream: MediaStream | null; nodeRef: React.RefObject<HTMLDivElement | null> }) => {
+    const localVideoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+        if (localVideoRef.current && stream) {
+            localVideoRef.current.srcObject = stream;
+        }
+    }, [stream]);
+
+    return (
+        <Draggable
+            nodeRef={nodeRef as React.RefObject<HTMLElement>}
+            bounds="parent"
+        >
+            <div
+                ref={nodeRef}
+                className="fixed bottom-10 right-10 w-56 aspect-video bg-[var(--bg-secondary)] rounded-2xl overflow-hidden cursor-move border border-[var(--glass-border)] z-[200] group shadow-2xl transition-shadow duration-300 hover:shadow-indigo-500/10 active:scale-[0.98]"
+            >
+                <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1] pointer-events-none" />
+
+                <div className="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded-full bg-black/60 border border-white/10 pointer-events-none">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-white">Live Monitor</span>
+                </div>
+            </div>
+        </Draggable>
+    );
+});
+
+/**
+ * Premium Interview Dashboard - Modern SaaS Style
  */
 export default function InterviewDashboard() {
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Core State
     const [phase, setPhase] = useState<'loading' | 'live' | 'error'>('loading');
-    const [isCameraOn, setIsCameraOn] = useState(true);
-    const [isMicOn, setIsMicOn] = useState(true);
-    const [isScreenSharing, setIsScreenSharing] = useState(false);
     const [isSecured, setIsSecured] = useState(false);
-    const [violations, setViolations] = useState(0);
-    const [showWarning, setShowWarning] = useState(false);
-    const [warningMsg, setWarningMsg] = useState('');
-    const [infoMsg, setInfoMsg] = useState('');
+    const [proctoringWarnings, setProctoringWarnings] = useState(0);
+    const [showWarningPopup, setShowWarningPopup] = useState({ show: false, message: '' });
     const [errorHeader, setErrorHeader] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [testFailed, setTestFailed] = useState(false);
 
-    // Persistent Refs for WebRTC Stability
+    const isAssessmentActive = location.pathname.includes('/assessment');
+    const isQuestionPage = location.pathname.includes('/assessment/question');
+
+    // Refs
     const streamRef = useRef<MediaStream | null>(null);
     const screenStreamRef = useRef<MediaStream | null>(null);
-    const isScreenSharingRef = useRef(false);
-    const isRequestingScreenRef = useRef(false);
-    const hasRequestedRef = useRef(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const draggableRef = useRef<HTMLDivElement>(null);
+    const hasRequestedRef = useRef(false);
+    const lastWarningTimeRef = useRef(0);
 
-    /**
-     * Media Management - Singleton Pattern
-     */
+    // Media Management
     const stopTracks = useCallback(() => {
         if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => track.stop());
@@ -42,209 +83,33 @@ export default function InterviewDashboard() {
     const startInterview = useCallback(async () => {
         if (hasRequestedRef.current) return;
         hasRequestedRef.current = true;
-
         setPhase('loading');
-        setErrorMessage('');
-
         try {
             const mediaStream = await navigator.mediaDevices.getUserMedia({
-                video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+                video: { width: { ideal: 1280 }, height: { ideal: 720 } },
                 audio: true,
             });
-
             streamRef.current = mediaStream;
             setPhase('live');
         } catch (err: any) {
-            hasRequestedRef.current = false; // Reset if failed so retry is possible
+            hasRequestedRef.current = false;
             setPhase('error');
-            setErrorHeader('Connection Error');
-            if (err.name === 'NotAllowedError') {
-                setErrorMessage('Camera or microphone access denied. Please allow permissions in your browser bar.');
-            } else {
-                setErrorMessage('No media gear detected. Ensure your devices are connected.');
-            }
+            setErrorHeader('Security Initialization Failed');
+            setErrorMessage('Unable to access primary camera and microphone. Ensure permissions are granted for proctoring.');
         }
     }, []);
 
     useEffect(() => {
+        startInterview();
         return () => stopTracks();
-    }, [stopTracks]);
+    }, [startInterview, stopTracks]);
 
-    /**
-     * Security: Multi-Tab Prevention
-     */
+    // UI Effects
     useEffect(() => {
-        const channel = new BroadcastChannel('interview_session');
-        channel.postMessage('new_tab_attempt');
-
-        channel.onmessage = (msg) => {
-            if (msg.data === 'new_tab_attempt') {
-                channel.postMessage('session_exists');
-            } else if (msg.data === 'session_exists' && phase === 'live') {
-                setPhase('error');
-                setErrorHeader('Security Violation');
-                setErrorMessage('Another session is already active in a different tab/window. Please close all other tabs and retry.');
-            }
-        };
-
-        return () => channel.close();
-    }, [phase]);
-
-
-    /**
-     * Security: Keyboard & UI Restrictions
-     */
-    const handleViolation = useCallback((msg: string) => {
-        if (!isSecured) return;
-
-        setViolations(v => {
-            const next = v + 1;
-            if (next >= 3) {
-                // Auto-terminate
-                stopTracks();
-                window.location.reload();
-            }
-            return next;
-        });
-
-        setWarningMsg(msg);
-        setShowWarning(true);
-    }, [isSecured, stopTracks]);
-
-    useEffect(() => {
-        if (!isSecured) return;
-
-        const isExempt = () => isScreenSharingRef.current || isRequestingScreenRef.current;
-
-        const handleBlur = () => {
-            // Exempt blur if screen sharing is active or being requested
-            if (!isExempt()) handleViolation("Window focus lost! Please stay on the assessment page.");
-        };
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'hidden' && !isExempt()) {
-                handleViolation("Tab switch detected! This activity is logged.");
-            }
-        };
-        const handleContextMenu = (e: MouseEvent) => {
-            e.preventDefault();
-            return false;
-        };
-        const handleFullscreenChange = () => {
-            if (!document.fullscreenElement && !isExempt()) {
-                handleViolation("Fullscreen exited! Assessment must be taken in fullscreen mode.");
-            } else if (!document.fullscreenElement && isExempt()) {
-                // If sharing but not fullscreen, attempt re-entry after a brief delay
-                // to allow browser UI transitions to settle.
-                setTimeout(() => {
-                    if (!document.fullscreenElement && isExempt()) {
-                        enterFullscreen().catch(() => { });
-                    }
-                }, 1000);
-            }
-        };
-
-        window.addEventListener('blur', handleBlur);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        window.addEventListener('contextmenu', handleContextMenu);
-        document.addEventListener('fullscreenchange', handleFullscreenChange);
-
-        return () => {
-            window.removeEventListener('blur', handleBlur);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            window.removeEventListener('contextmenu', handleContextMenu);
-            document.removeEventListener('fullscreenchange', handleFullscreenChange);
-        };
-    }, [isSecured, handleViolation]);
-
-    /**
-     * Tablet Safety: Restrict Touch Gestures (Best Effort)
-     */
-    useEffect(() => {
-        if (!isSecured) return;
-
-        const preventGestures = (e: TouchEvent) => {
-            if (e.touches.length > 1) {
-                e.preventDefault();
-                handleViolation("Multi-touch gestures are restricted during the assessment.");
-            }
-        };
-
-        window.addEventListener('touchstart', preventGestures, { passive: false });
-        // Minimal restriction for swipe-up is impossible via JS, but we log the resulting blur.
-
-        return () => window.removeEventListener('touchstart', preventGestures);
-    }, [isSecured, handleViolation]);
-
-    /**
-     * Video Attachment Effect - Senior Level Reliability
-     */
-    useEffect(() => {
-        const videoElement = videoRef.current;
-        const currentStream = isScreenSharing ? screenStreamRef.current : streamRef.current;
-
-        if (videoElement && currentStream && phase === 'live') {
-            // Only re-assign if it's different to prevent flicker/black frames
-            if (videoElement.srcObject !== currentStream) {
-                videoElement.srcObject = currentStream;
-            }
-
-            videoElement.play().catch(err => {
-                if (err.name !== 'AbortError') {
-                    console.error("Video play failed:", err);
-                }
-            });
+        if (videoRef.current && streamRef.current && phase === 'live' && !isAssessmentActive) {
+            videoRef.current.srcObject = streamRef.current;
         }
-    }, [phase, isScreenSharing]);
-
-    /**
-     * Keyboard Shortcuts Handler
-     */
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (phase !== 'live') return;
-
-            switch (e.key.toLowerCase()) {
-                case 'm':
-                    if (isSecured) toggleMic();
-                    break;
-                case 'c':
-                    if (isSecured) toggleCamera();
-                    break;
-                case 's':
-                    if (isSecured) toggleScreenShare();
-                    break;
-                case 'escape':
-                    if (isSecured) handleEndInterview();
-                    break;
-            }
-
-            // Security: Block sensitive hotkeys
-            const isCtrl = e.ctrlKey || e.metaKey;
-            const isAlt = e.altKey;
-            const key = e.key.toLowerCase();
-
-            // Block common inspect/source keys
-            if (
-                (isCtrl && (key === 'u' || key === 's' || key === 'i' || key === 'j')) ||
-                (isCtrl && e.shiftKey && (key === 'i' || key === 'j' || key === 'c')) ||
-                key === 'f12'
-            ) {
-                e.preventDefault();
-                handleViolation("Developer tools and source viewing are disabled.");
-                return false;
-            }
-
-            // Block Alt+Tab/Meta+Tab (best effort)
-            if (isAlt || key === 'tab') {
-                // Browsers usually don't allow blocking Alt+Tab for OS security, 
-                // but we detect the resulting blur.
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [phase]);
-
+    }, [phase, isAssessmentActive]);
 
     const enterFullscreen = async () => {
         try {
@@ -252,286 +117,244 @@ export default function InterviewDashboard() {
                 await document.documentElement.requestFullscreen();
             }
             setIsSecured(true);
-            setShowWarning(false);
+            return true;
         } catch (err) {
-            console.error("Fullscreen failed:", err);
-            setPhase('error');
-            setErrorHeader('Fullscreen Required');
-            setErrorMessage('Assessments require fullscreen mode for security. Please allow fullscreen and retry.');
+            console.error("Fullscreen failed", err);
+            setIsSecured(false);
+            return false;
         }
     };
 
-    /**
-     * Auto-start Effect
-     */
+    const handleViolation = useCallback(async (msg: string, immediate: boolean = false) => {
+        const now = Date.now();
+        // Bypass throttle for immediate actions (like Escape key)
+        if (!immediate && now - lastWarningTimeRef.current < 2000) return;
+        lastWarningTimeRef.current = now;
+
+        setProctoringWarnings(prev => {
+            const newVal = prev + 1;
+            if (newVal >= 5) {
+                setTestFailed(true);
+                stopTracks();
+                setTimeout(() => navigate('/'), 4000);
+            }
+            return newVal;
+        });
+
+        setShowWarningPopup({ show: true, message: msg });
+        setIsSecured(false); // Force re-authorization gate
+
+        if (immediate) {
+            // Attempt a best-effort sync restoration
+            document.documentElement.requestFullscreen().catch(() => { });
+        }
+    }, [navigate, stopTracks]);
+
+    // Security Listeners
     useEffect(() => {
-        startInterview();
-    }, [startInterview]);
+        if (!isAssessmentActive || phase !== 'live' || testFailed) return;
 
-    const toggleCamera = useCallback(() => {
-        if (streamRef.current) {
-            const videoTrack = streamRef.current.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = !videoTrack.enabled;
-                setIsCameraOn(videoTrack.enabled);
+        const handleBlur = () => handleViolation('Environment focus lost. Unauthorized background activity detected.');
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement && isAssessmentActive && !testFailed) {
+                setIsSecured(false);
+                if (isSecured) {
+                    handleViolation('Security breach: Fullscreen mode bypassed.');
+                }
             }
-        }
-    }, []);
-
-    const toggleMic = useCallback(() => {
-        if (streamRef.current) {
-            const audioTrack = streamRef.current.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                setIsMicOn(audioTrack.enabled);
+        };
+        const handleContextMenu = (e: MouseEvent) => {
+            if (isAssessmentActive) {
+                e.preventDefault();
+                handleViolation('Unauthorized interaction: Right-click restricted.');
             }
-        }
-    }, []);
+        };
 
-    const handleScreenShareEnd = useCallback(() => {
-        if (screenStreamRef.current) {
-            screenStreamRef.current.getTracks().forEach(track => track.stop());
-            screenStreamRef.current = null;
-        }
-        isScreenSharingRef.current = false;
-        setIsScreenSharing(false);
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!isAssessmentActive) return;
 
-        // Notify and Force Fullscreen
-        setInfoMsg("Screen sharing has ended. You have entered Fullscreen Mode. Please continue your interview.");
-        enterFullscreen();
-    }, []);
+            // Block Alt+Tab, Ctrl, Meta, F12, F5
+            const restrictedKeys = ['F12', 'F5', 'Tab', 'Escape'];
+            if (e.altKey || e.ctrlKey || e.metaKey || restrictedKeys.includes(e.key)) {
+                if (e.key === 'r' && (e.ctrlKey || e.metaKey)) e.preventDefault(); // Block Refresh
 
-    const toggleScreenShare = useCallback(async () => {
-        if (isScreenSharing) {
-            handleScreenShareEnd();
-        } else {
-            // Start screen sharing
-            isRequestingScreenRef.current = true;
-            try {
-                const screenStream = await navigator.mediaDevices.getDisplayMedia({
-                    video: true,
-                    audio: false // We keep the mic from the user audio stream
-                });
-
-                screenStreamRef.current = screenStream;
-
-                // Handle when user clicks "Stop sharing" in browser UI
-                screenStream.getVideoTracks()[0].onended = () => {
-                    handleScreenShareEnd();
-                };
-
-                isScreenSharingRef.current = true;
-                setIsScreenSharing(true);
-                setInfoMsg(''); // Clear any previous info message
-
-                // Re-enforce Fullscreen after sharing starts
-                // Short timeout gives browser time to finalize sharing state before we request fullscreen
-                setTimeout(() => {
-                    enterFullscreen();
-                }, 500);
-            } catch (err) {
-                console.error("Screen sharing failed:", err);
-            } finally {
-                isRequestingScreenRef.current = false;
+                if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Backspace' && e.key.length !== 1) {
+                    e.preventDefault();
+                    // If Escape, use it as a gesture to immediately restore
+                    handleViolation('Security violation detected. Potential environment tampering.', e.key === 'Escape');
+                }
             }
-        }
-    }, [isScreenSharing, handleScreenShareEnd]);
+        };
 
-    const handleEndInterview = () => {
-        if (window.confirm("Submit your assessment and end the call?")) {
-            stopTracks();
-            window.location.reload();
-        }
-    };
+        window.addEventListener('blur', handleBlur);
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        window.addEventListener('contextmenu', handleContextMenu);
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            window.removeEventListener('blur', handleBlur);
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            window.removeEventListener('contextmenu', handleContextMenu);
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isAssessmentActive, phase, handleViolation, testFailed, isSecured]);
 
 
-    // --- COMPONENTS ---
 
-    // --- SECURITY OVERLAY ---
-    const SecurityOverlay = () => {
-        if (!isSecured && phase === 'live') {
-            return (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/90 backdrop-blur-xl animate-fade-in p-6">
-                    <div className="glass-card max-w-lg p-10 text-center border-indigo-500/20">
-                        <div className="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
-                            <AlertCircle className="w-10 h-10 text-indigo-400" />
-                        </div>
-                        <h2 className="text-2xl font-bold mb-4 text-[var(--text-primary)]">Start Secure Assessment</h2>
-                        <ul className="text-white text-sm text-left mb-10 space-y-4 px-4 bg-slate-900 shadow-inner p-6 rounded-2xl border border-white/5">
-                            <li className="flex items-start gap-3">
-                                <span className="w-5 h-5 bg-indigo-500/20 rounded-full flex items-center justify-center text-[10px] text-indigo-400 font-bold shrink-0 mt-0.5">1</span>
-                                Fullscreen mode will be enforced throughout the session.
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <span className="w-5 h-5 bg-indigo-500/20 rounded-full flex items-center justify-center text-[10px] text-indigo-400 font-bold shrink-0 mt-0.5">2</span>
-                                Tab switching or minimizing will result in immediate violations.
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <span className="w-5 h-5 bg-indigo-500/30 rounded-full flex items-center justify-center text-[10px] text-indigo-300 font-bold shrink-0 mt-0.5">3</span>
-                                Three violations will lead to automatic termination.
-                            </li>
-                        </ul>
-                        <button
-                            onClick={enterFullscreen}
-                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl shadow-[0_10px_30px_rgba(79,70,229,0.3)] transition-all active:scale-[0.98] text-sm"
-                        >
-                            Agree & Enter Fullscreen
-                        </button>
+    if (testFailed) {
+        return (
+            <div className="fixed inset-0 z-[2000] bg-[var(--bg-primary)] flex items-center justify-center p-8 text-center animate-in fade-in duration-500">
+                <div className="max-w-sm w-full p-12 bg-[var(--bg-secondary)] border border-red-500/20 rounded-[2rem] shadow-2xl">
+                    <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-8 border border-red-500/10">
+                        <ShieldAlert className="w-8 h-8 animate-shake" />
                     </div>
+                    <h2 className="text-2xl font-semibold text-red-500 mb-4 tracking-tight uppercase">Session Terminated</h2>
+                    <p className="text-[var(--text-secondary)] mb-10 text-sm font-normal">Environmental violations detected. Access has been revoked to maintain assessment integrity.</p>
+                    <button onClick={() => navigate('/')} className="w-full py-4 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl uppercase tracking-widest text-[10px] transition-all">Return to Home</button>
                 </div>
-            );
-        }
+            </div>
+        );
+    }
 
-        if (showWarning && isSecured) {
-            return (
-                <div className="fixed inset-0 z-[300] flex items-center justify-center bg-red-950/80 backdrop-blur-md animate-fade-in p-6">
-                    <div className="glass-card max-w-sm p-8 text-center border-red-500/30">
-                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <AlertCircle className="w-8 h-8 text-red-500" />
-                        </div>
-                        <h3 className="text-xl font-bold text-[var(--accent-red)] mb-2">Warning: {violations}/3</h3>
-                        <p className="text-[var(--text-primary)] font-bold text-sm mb-8 leading-relaxed">{warningMsg}</p>
-                        <button
-                            onClick={enterFullscreen}
-                            className="w-full bg-[var(--accent-red)] text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-red-500/20 transition-all text-xs"
-                        >
-                            Refocus & Re-enter Fullscreen
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-
-        if (infoMsg && isSecured) {
-            return (
-                <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-950/80 backdrop-blur-md animate-fade-in p-6">
-                    <div className="glass-card max-w-md p-8 text-center border-indigo-500/20">
-                        <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <Monitor className="w-8 h-8 text-indigo-400" />
-                        </div>
-                        <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2">Assessment Secured</h3>
-                        <p className="text-[var(--text-secondary)] text-sm mb-8 leading-relaxed font-bold">{infoMsg}</p>
-                        <button
-                            onClick={() => {
-                                setInfoMsg('');
-                                enterFullscreen();
-                            }}
-                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all text-xs"
-                        >
-                            Continue Interview
-                        </button>
-                    </div>
-                </div>
-            );
-        }
-
-        return null;
-    };
-
-    // --- RENDERING ---
-
-    // --- FINAL RENDER ---
     return (
-        <div className="min-h-screen bg-[var(--bg-primary)]">
-            <SecurityOverlay />
+        <div className={`fixed inset-0 bg-[var(--bg-primary)] ${isQuestionPage ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+            {showWarningPopup.show && (
+                <div className="fixed inset-0 z-[1000] bg-[var(--bg-primary)]/90 backdrop-blur-xl flex items-center justify-center p-6 animate-in fade-in duration-300">
+                    <div className="max-w-sm w-full p-10 bg-[var(--bg-secondary)] border border-red-500/10 shadow-2xl rounded-[1.5rem] text-center">
+                        <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-6">
+                            <AlertTriangle className="w-6 h-6" />
+                        </div>
 
-            {phase === 'loading' && (
-                <div className="relative w-full h-screen flex flex-col items-center justify-center p-4 animate-fade-in bg-[var(--bg-primary)]">
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="w-16 h-16 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
-                        <div className="text-center">
-                            <h2 className="text-xl font-bold mb-2">Setting Up Hardware</h2>
-                            <p className="text-sm text-[var(--text-secondary)]">Please allow camera and microphone access...</p>
+                        <h2 className="text-xl font-semibold mb-2 text-red-500 uppercase tracking-tight">Violation Alert</h2>
+                        <div className="flex items-center justify-center gap-2 mb-8">
+                            <span className="text-[9px] uppercase tracking-widest font-bold text-slate-500">Counter:</span>
+                            <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map(v => (
+                                    <div key={v} className={`w-1.5 h-1.5 rounded-full transition-all ${v <= proctoringWarnings ? 'bg-red-500' : 'bg-white/10'}`} />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="bg-[var(--bg-primary)]/50 rounded-xl p-6 border border-[var(--glass-border)] mb-8 text-left">
+                            <p className="text-[11px] font-medium text-[var(--text-primary)] leading-relaxed tracking-tight">{showWarningPopup.message}</p>
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={async () => {
+                                    const success = await enterFullscreen();
+                                    if (success) {
+                                        setShowWarningPopup({ show: false, message: '' });
+                                    }
+                                }}
+                                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl uppercase tracking-widest text-[10px] transition-all"
+                            >
+                                Restore Fullscreen
+                            </button>
+                            <button
+                                onClick={() => navigate('/')}
+                                className="w-full py-2 text-[9px] font-bold text-slate-600 hover:text-red-400 transition-colors uppercase tracking-[0.3em]"
+                            >
+                                Abandon Session
+                            </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {phase === 'error' && (
-                <div className="relative w-full h-screen flex items-center justify-center bg-[var(--bg-primary)] overflow-hidden">
-                    <div className="w-full max-w-md mx-auto p-4 z-10 animate-fade-in">
-                        <div className="glass-card p-10 text-center">
-                            <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <AlertCircle className="w-8 h-8 text-red-400" />
-                            </div>
-                            <h2 className="text-xl font-bold text-[var(--accent-red)] mb-3 leading-tight drop-shadow-sm">{errorHeader}</h2>
-                            <p className="text-[var(--text-secondary)] text-xs mb-8 leading-relaxed font-bold px-4">{errorMessage}</p>
-                            <button
-                                onClick={() => {
-                                    hasRequestedRef.current = false;
-                                    startInterview();
-                                }}
-                                className="w-full bg-slate-800/80 hover:bg-slate-700 text-white font-bold py-3.5 rounded-xl border border-white/5 transition-all active:scale-95 text-xs"
-                            >
-                                Go Back & Retry
-                            </button>
+
+
+            {phase === 'loading' && (
+                <div className="relative w-full h-screen flex flex-col items-center justify-center bg-[var(--bg-primary)]">
+                    <div className="relative">
+                        <div className="w-20 h-20 rounded-[2rem] border-[4px] border-indigo-500/10 border-t-indigo-500 animate-spin" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <ShieldCheck className="w-8 h-8 text-indigo-500/40" />
                         </div>
+                    </div>
+                    <p className="mt-8 text-[11px] font-bold uppercase tracking-[0.5em] text-indigo-500/80 animate-pulse">Initializing Security Core</p>
+                </div>
+            )}
+
+            {phase === 'error' && (
+                <div className="w-full h-screen flex items-center justify-center bg-[var(--bg-primary)] p-6">
+                    <div className="p-14 bg-[var(--bg-secondary)]/80 backdrop-blur-3xl text-center max-w-md rounded-[3rem] border border-[var(--glass-border)] shadow-2xl">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-red-500/10 flex items-center justify-center text-red-500 mx-auto mb-8">
+                            <AlertCircle size={32} />
+                        </div>
+                        <h2 className="text-2xl font-semibold mb-4 tracking-tighter text-[var(--text-primary)] uppercase">{errorHeader}</h2>
+                        <p className="text-slate-500 text-[14px] leading-relaxed mb-12 font-normal">{errorMessage}</p>
+                        <button onClick={startInterview} className="w-full bg-[#1a1a1c] hover:bg-white hover:text-black text-white font-bold py-5 rounded-2xl uppercase tracking-[0.25em] text-[11px] transition-all border border-white/5 shadow-2xl">Re-attempt Sync</button>
                     </div>
                 </div>
             )}
 
             {phase === 'live' && (
-                <div className="h-screen w-full bg-[var(--bg-primary)] flex flex-col items-center justify-center p-6 relative overflow-hidden">
-                    <div className="flex flex-col items-center gap-8 w-full max-w-5xl z-10">
-                        <div className={`video-surface shadow-2xl ${isCameraOn ? 'active' : ''}`}>
-                            <video
-                                ref={videoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                className={`w-full h-full object-cover transform scale-x-[-1] transition-opacity duration-700 ${isCameraOn ? 'opacity-100' : 'opacity-0'}`}
-                            />
-
-                            {/* Camera OFF Layout */}
-                            {!isCameraOn && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 animate-fade-in">
-                                    <User className="w-16 h-16 text-slate-700 mb-4" />
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Camera Off</span>
+                <>
+                    {/* Security Protocol Gate */}
+                    {isAssessmentActive && !isSecured ? (
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[var(--bg-primary)]/95 p-6 animate-in fade-in duration-500">
+                            <div className="max-w-md w-full p-12 bg-[var(--bg-secondary)] border border-[var(--glass-border)] shadow-2xl rounded-[2rem] relative overflow-hidden">
+                                <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 mx-auto mb-8">
+                                    <ShieldAlert className="w-8 h-8" />
                                 </div>
-                            )}
+                                <h1 className="text-2xl font-semibold mb-2 tracking-tight text-[var(--text-primary)] uppercase text-center">Security Gate</h1>
+                                <p className="text-indigo-500 text-[10px] uppercase tracking-[0.4em] font-bold mb-10 text-center">System Authorization Required</p>
+
+                                <div className="text-left mb-10 space-y-4 px-8 py-8 bg-[var(--bg-primary)]/50 rounded-2xl border border-[var(--glass-border)]">
+                                    {[
+                                        "Persistent fullscreen presence is mandatory.",
+                                        "Biometric monitoring is active.",
+                                        "Environment scanning in progress.",
+                                        "5 violations will terminate the session."
+                                    ].map((text, i) => (
+                                        <div key={i} className="flex items-start gap-3">
+                                            <div className="w-1 h-1 rounded-full bg-indigo-500 mt-2 flex-shrink-0" />
+                                            <p className="text-[12px] font-medium text-[var(--text-secondary)] leading-relaxed">{text}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <button onClick={enterFullscreen} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4.5 rounded-xl uppercase tracking-widest text-[11px] transition-all">Enable Protection & Start</button>
+                            </div>
                         </div>
+                    ) : null}
 
-                        {/* Controls - Strictly BELOW video card */}
-                        <div className="flex items-center gap-4 py-4 px-8 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-full shadow-2xl backdrop-blur-xl">
-                            <button
-                                onClick={toggleCamera}
-                                className={`meet-btn ${!isCameraOn ? 'off' : ''}`}
-                                aria-label="Toggle camera"
-                                data-tip={isCameraOn ? "Turn off camera" : "Turn on camera"}
-                            >
-                                {isCameraOn ? <Camera size={20} strokeWidth={2.5} /> : <CameraOff size={20} strokeWidth={2.5} />}
-                            </button>
-
-                            <button
-                                onClick={toggleMic}
-                                className={`meet-btn ${!isMicOn ? 'off' : ''}`}
-                                aria-label="Toggle microphone"
-                                data-tip={isMicOn ? "Mute microphone" : "Unmute microphone"}
-                            >
-                                {isMicOn ? <Mic size={20} strokeWidth={2.5} /> : <MicOff size={20} strokeWidth={2.5} />}
-                            </button>
-
-                            <button
-                                onClick={toggleScreenShare}
-                                className={`meet-btn ${isScreenSharing ? 'active-share' : ''}`}
-                                aria-label="Share screen"
-                                data-tip={isScreenSharing ? "Stop sharing" : "Share screen"}
-                            >
-                                {isScreenSharing ? <MonitorOff size={20} strokeWidth={2.5} /> : <Monitor size={20} strokeWidth={2.5} />}
-                            </button>
-
-                            <button
-                                onClick={handleEndInterview}
-                                className="meet-btn danger"
-                                aria-label="End call"
-                                data-tip="End call"
-                            >
-                                <PhoneOff size={24} strokeWidth={2.5} />
-                            </button>
+                    {/* Primary Assessment Interface */}
+                    <AssessmentLayout>
+                        <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                            <Outlet />
                         </div>
-                    </div>
-                </div>
+                    </AssessmentLayout>
+
+                    {/* Draggable Proctoring Panel */}
+                    <ProctoringPanel
+                        stream={streamRef.current}
+                        nodeRef={draggableRef}
+                    />
+                </>
             )}
         </div>
+    );
+}
+
+// Add ShieldCheck for the loading icon
+function ShieldCheck({ className, size }: { className?: string; size?: number }) {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={size || 24}
+            height={size || 24}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={className}
+        >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+            <path d="m9 12 2 2 4-4" />
+        </svg>
     );
 }

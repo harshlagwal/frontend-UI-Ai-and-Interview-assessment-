@@ -1,18 +1,25 @@
-# Professional Interview & Assessment Platform
+# Professional AI Interview & Assessment Platform
 
-This repository contains a full-stack assessment platform featuring a secure, Google Meet-style interview dashboard with WebRTC integration, real-time security monitoring, and a professional dark/light themed UI.
+This repository contains a cutting-edge full-stack assessment platform. It features a secure, Google Meet-style interview dashboard, real-time AI proctoring, and a comprehensive assessment module designed for technical and domain-based evaluations.
 
 ## 🌟 Key Features
 
-- **WebRTC Video/Audio**: Stable singleton-based media stream management.
-- **Secure Environment**:
-  - Fullscreen enforcement and violation tracking.
-  - Tab switch and focus loss detection.
-  - Development tools (F12) and hotkey blocking.
-  - Multi-tab prevention via `BroadcastChannel`.
-- **Professional Dashboard**: Opaque, high-contrast UI for clear data presentation.
-- **Full Authentication**: Secure Login and Signup flow with JWT.
-- **Dynamic Theming**: Smooth transition between premium Light and Dark modes.
+### 🛡️ AI Proctoring & Security
+- **Secure Environment**: Automatic fullscreen enforcement with violation tracking (5 strikes rule).
+- **Activity Monitoring**: Detection of tab switching, focus loss, and unauthorized background activity.
+- **Interaction Control**: Blocking of right-click, developer tools (F12), and restricted hotkeys.
+- **Multi-Tab Prevention**: Singleton session management using `BroadcastChannel`.
+
+### 🎥 Interview Dashboard
+- **WebRTC Integration**: High-performance video/audio streaming with live proctoring overlays.
+- **Draggable UI**: Floating proctoring panel for a customized viewing experience.
+- **Premium Aesthetics**: Glassmorphism design with dynamic light/dark mode support.
+
+### 📝 Assessment Module
+- **Domain Selection**: Tailored assessment paths (e.g., Frontend, Backend, Java, Python).
+- **Advanced Timer**: 40-minute session limit with urgent state warnings (last 5 minutes).
+- **Question Engine**: Dynamic question loading with professional feedback and submission flows.
+- **Success Modal**: High-impact submission confirmation with success animations.
 
 ---
 
@@ -20,14 +27,18 @@ This repository contains a full-stack assessment platform featuring a secure, Go
 
 ```text
 frontend-assessment/
-├── server/            # Backend Node.js/Express API
-│   ├── auth.js        # Authentication logic (JWT)
-│   ├── db.js          # Database connection & schema init
-│   └── index.js       # Main server entry point
-├── src/               # Frontend React/Vite source
-│   ├── components/    # Reusable UI components (Auth, Dashboard, etc.)
-│   └── services/      # API communication services
-└── public/            # Static assets
+├── server/               # Node.js/Express Backend
+│   ├── auth.js           # JWT-based Authentication Logic
+│   ├── db.js             # PostgreSQL Connection & Schema
+│   └── index.js          # API Entry Point
+├── src/                  # React/Vite Frontend
+│   ├── assessment/       # Assessment Module (Timer, Questions, Layout)
+│   ├── components/       # UI Components (Auth, Dashboard, Proctored Panels)
+│   ├── context/          # State Management Providers
+│   ├── services/         # API abstraction layer
+│   └── App.tsx           # Main Application Router
+├── public/               # Static Assets & Icons
+└── interview_db_final_structure.sql  # Database Schema Export
 ```
 
 ---
@@ -35,82 +46,55 @@ frontend-assessment/
 ## 🛠️ Installation & Setup
 
 ### 1. Prerequisites
-- **Node.js**: v18 or later
-- **PostgreSQL**: A running instance with a database named `interview_db`
+- **Node.js**: v18+
+- **PostgreSQL**: Database named `interview_db`
 
-### 2. Database Setup
-1. Open your PostgreSQL terminal or tool (like pgAdmin).
-2. Create the database: `CREATE DATABASE interview_db;`.
-3. Import the provided schema:
+### 2. Database Initialization
+1. Create the database: `CREATE DATABASE interview_db;`
+2. Import schema:
    ```bash
-   psql -U your_postgres_user -d interview_db -f interview_db_final_structure.sql
-   ```
-   *The server will also automatically initialize basic tables (users, feedback) if the file is not imported.*
-
-### 3. Backend Configuration
-1. Navigate to the server directory:
-   ```bash
-   cd server
-   ```
-2. Create a `.env` file (refer to `.env.example` in the server folder):
-   ```env
-   DB_USER=your_postgres_user
-   DB_PASSWORD=your_postgres_password
-   DB_HOST=localhost
-   DB_PORT=5432
-   DB_NAME=interview_db
-   JWT_SECRET=your_super_secret_key
-   PORT=5000
-   ```
-3. Install dependencies:
-   ```bash
-   npm install
+   psql -U your_user -d interview_db -f interview_db_final_structure.sql
    ```
 
-### 4. Frontend Configuration
-1. Navigate to the root folder:
-   ```bash
-   cd ..
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+### 3. Environment Configuration
+Create a `.env` file in the `server/` directory:
+```env
+DB_USER=your_postgres_user
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=interview_db
+JWT_SECRET=your_jwt_secret
+PORT=5000
+```
 
----
-
-## 🚀 Running the Application
-
-You need to run **both** the backend and the frontend simultaneously in two different terminals.
-
-### Start the Backend
+### 4. Running the App
+**Terminal 1 (Backend)**:
 ```bash
 cd server
+npm install
 npm start
 ```
-*The server will run on `http://localhost:5000`*
 
-### Start the Frontend
-Open a **new terminal** window:
+**Terminal 2 (Frontend)**:
 ```bash
-# From the root directory (frontend-assessment)
+npm install
 npm run dev
 ```
-*The app will run on `http://localhost:5173` (or the next available port)*
 
 ---
 
-## 💻 Tech Stack
-- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Lucide Icons.
-- **Backend**: Node.js, Express, JWT, Bcrypt.
-- **Database**: PostgreSQL.
+## 🚀 Tech Stack
+- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Lucide Icons, Framer Motion.
+- **Backend**: Node.js, Express, Postgres (pg), JsonWebToken.
+- **Deployment**: Optimized for modern Vercel/Render workflows.
 
 ---
 
-## 📧 Contact Information
-- **Portfolio/GitHub**: [harshlagwal](https://github.com/harshlagwal)
-- **Gmail**: [harshlagwal123@gmail.com](mailto:harshlagwal123@gmail.com)
-- **Project Link**: [GitHub Repository](https://github.com/harshlagwal/frontend-UI-Ai-and-Interview-assessment-)
+## 📧 Contact & Repository
+- **Lead Developer**: Harsh Lagwal
+- **Email**: [harshlagwal123@gmail.com](mailto:harshlagwal123@gmail.com)
+- **Repository**: [Frontend UI AI & Interview Assessment](https://github.com/harshlagwal/frontend-UI-Ai-and-Interview-assessment-)
 
 ---
-*Built for excellence in engineering and assessment.*
+*Developed for professional excellence in engineering assessments.*
