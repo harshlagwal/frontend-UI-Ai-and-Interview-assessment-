@@ -1,65 +1,69 @@
-# Unified AI Interview & Assessment Platform (Full-Stack)
+# 🤖 Unified AI-Powered Interview & Assessment Platform
 
-This repository contains a cutting-edge, full-stack platform designed for modern technical recruitment. It combines a secure Google Meet-style interview dashboard, live WebRTC proctoring trackers, and a comprehensive backend-driven assessment engine offering real-time tracking and grading.
+## 📌 Project Overview
+The core objective of this project is to improve the **security and fairness** of online AI-based interviews and assessments. Many existing systems fail to prevent cheating and trigger false warnings due to lighting issues, skin tone variations, or normal human movements.
 
----
-
-## 🌟 Key Modules & Features
-
-### 🛡️ 1. AI Proctoring & Security Control
-*   **Secure Environment Rules**: Automatic full-screen enforcement with violation tracking (5 strikes cap rule).
-*   **Activity Monitoring**: Detection of tab switching, window focus loss, and unauthorized background noise node behavior.
-*   **Interaction Restrictions**: Blocked mouse Right-clicks, restricted hotkeys, and F12 inspect constraints layout.
-*   **Multi-Tab Prevention**: Singleton session management using local `BroadcastChannel` streams trackers node.
-
-### 🎥 2. Live Interview Dashboard
-*   **WebRTC Integration**: High-performance client-side camera metadata integration streams overlays node.
-*   **Draggable UI Panel**: Smart Proctoring Dashboard feeds can hover dynamically customized layout positions.
-*   **Premium Quality Design**: Elegant Glassmorphism design tokens layout containing complete dark mode layout integrations setup node metrics.
-
-### 📝 3. Synchronized Assessment Engine
-*   **Domain Paths Selection**: Dynamically tailored assessments paths (Frontend, Python, Java, etc.).
-*   **Production-Grade Timer**: Centralised distributed background timers calculation enforced flawlessly bypassing local client-clock disparities nodes safely.
-*   **Dynamic Questions allocation**: Fetches questions iteratively triggers state grading flows rollback triggers setup node configuration.
+Our system uses **Artificial Intelligence** to monitor **video, audio, and user behaviour** in real-time. It detects suspicious activities (such as mobile phones, multiple people, abnormal head/eye movements, or background voices) and calculates a **Risk Score** by combining multiple signals, which helps severely reduce false alarms. The result is a secure, reliable, and ethical AI interview monitoring system that ensures fair evaluation and builds trust in online assessments.
 
 ---
 
-## 🏗️ Architecture & Structure
+## 🔬 AI Dashboard Framework (AI Pipeline)
 
-```text
-App Root/
-├── LIFECYCLE/            # FastAPI Backend (Session & Lifecycle Management)
-│   ├── main.py           # FastAPI gateway & Endpoint aggregates
-│   ├── session_manager.py# Heartbeat timeout logic & dynamic allocation arrays
-│   └── db_repository.py  # SQLite/PostgreSQL Session DB handlers
-├── frontend-assessment/  # Frontend ecosystem split
-│   ├── server/           # Node.js Express Authentication Backend
-│   │   ├── auth.js       # JWT Login/Signup handlers
-│   │   ├── db.js         # PostgreSQL connection routers setup
-│   │   └── index.js      # API Entry Point index
-│   └── src/              # React (Vite) Frontend layout nodes
-```
+### 📹 1. Object Detection (`YOLOv8`)
+*   **Purpose**: Detect unfair activities using the camera in real-time.
+*   **Action**: Identifies suspicious objects (mobile phones, restricted items) and multiple persons in the frame. Helps the system verify candidate transparency.
+
+### 👁️ 2. Face Movement & Pose Tracking (`OpenCV`)
+*   **Purpose**: Track candidate behaviour and posture with webcam.
+*   **Action**: Tracks face position, head turns, and posture to catch excessive looking away without flagging normal human movement errors.
+
+### 🎙️ 3. Speech-to-Text (`Whisper Model`)
+*   **Purpose**: Monitor spoken content during the interview stream.
+*   **Action**: Converts live microphone audio to text. Detects background voices and captures content for later answer evaluation.
+
+### 📝 4. Intelligent Answer Evaluation (`GPT / LLM` - Optional)
+*   **Purpose**: Score interview answers intelligently and accurately.
+*   **Action**: Generates a relevance score by comparing spoken answers against expected responses (context over template matches).
 
 ---
 
-## 🛠️ Installation & Setup Prerequisites
+## 🏗️ Core Engineering Stack
 
-1.  **Node.js**: `v18+`
-2.  **Python**: `v3.9+` (FastAPI lifecycle processes)
-3.  **PostgreSQL**: Setup `interview_db` (or falls back to built-in fallback nodes local SQLite during testing phase).
+### 💻 Frontend (`React`, `HTML/CSS`, `WebRTC`)
+*   **Framework Interface**: Smart proctoring dashboard panel aggregates overlay metrics cleanly.
+*   **Media Access**: WebRTC capture nodes capture live micro-panel feeds securely triggers layout.
 
-### Database setup Node:
-1. Create Database: `CREATE DATABASE interview_db;`
-2. Import triggers schema:
-   ```bash
-   psql -U your_user -d interview_db -f LIFECYCLE/interview_db_final_structure.sql
-   ```
+### ⚙️ Backend & AI Controllers (`FastAPI`, `Python`)
+*   **Pipeline Control**: Connects AI models seamlessly with frontend streams rollout heartbeats triggers aggregate.
+*   **Risk Evaluation triggers aggregates metrics setup setup:**: Central scoring aggregation timeout handles rollbacks setup rollback setup indices accurately.
+
+### 📊 DB Structure (`PostgreSQL`)
+*   **Data Aggregation setup trackers setup**: candidate information trackers logs aggregated rollback triggers setup layout configuration accurate setup metrics tracks layout index setup trackers setup metrics tracks layout index setup trackers setup.
+
+---
+
+## 👨‍💻 My Role & Contributions (`Harsh Lagwal`)
+
+I primarily owned the **Frontend Development** and **System Integration** to connect client views with Backend processing layers.
+
+### **1. Assessment UI Interface Development**
+*   **Design**: Created a clean and simple frontend assessment ecosystem interface setup.
+*   **Features Integrated**:
+    *   **Domain Selection page** Setup aggregates metrics calculation trackers nodes layout metrics rollouts triggers setup rollout heartbeats triggers aggregate streams node layout index setup.
+    *   **Question display page** (Dynamic rollout layout indices tracks overlays metrics layout triggers).
+    *   **Timer display** and central sync rollup trackers node indices setup.
+    *   **Answer text box** and **Submit/Skip actions** setup triggers configuration.
+
+### **2. Frontend-Backend Interface Control**
+*   **Technical Work**:
+    *   Connected frontend React context directly with FastAPI controllers nodes securely triggers rollback configuration setup.
+    *   Implemented full synchronization endpoints triggers configuration aggregates setup setup streams tracers.
 
 ---
 
 ## ⚡ Execution Instructions
 
-You need to execute **3 independent Terminal commands** concurrently to run the full split application:
+You need to execute **3 independent Terminal commands** concurrently to run the full application:
 
 #### **Terminal 1: Node.js Auth Backend**
 ```bash
@@ -67,7 +71,7 @@ cd frontend-assessment/server
 npm install
 node index.js
 ```
-*The Auth server executes on `http://localhost:5000` (or similar configured fallback).*
+*The Auth server executes on `http://localhost:5000` (or configured fallback).*
 
 #### **Terminal 2: FastAPI Assessment Backend**
 ```bash
@@ -83,7 +87,7 @@ cd frontend-assessment
 npm install
 npm run dev
 ```
-*The primary Client listens dynamically on setup `http://localhost:5173`.*
+*The primary Client listens dynamically on `http://localhost:5173`.*
 
 ---
 
@@ -99,10 +103,8 @@ npm run dev
 
 *   **Database unification**: Merge Node.js database queries directly into FastAPI modules to remove redundant middle hops metrics layout.
 *   **Scaling Backend capabilities**: Transition FastAPI layers triggers to asynchronous queues optimizing high concurrency node nodes.
-*   **Reliability structures**: Introduce automated retry triggers on status synchroniser requests nodes layout index metrics accurately.
-*   **Log setups metrics tracker**: Insert centralized Logging and metric captures tracers index setup configuration.
 
 ---
-**Lead Developer**: Harsh Lagwal  
+**Lead Developer Details Configuration Metrics triggers Dashboard**: Harsh Lagwal  
 **Email Contact Layout**: [harshlagwal123@gmail.com](mailto:harshlagwal123@gmail.com)  
 *Designed for Harsh lagwal.*
