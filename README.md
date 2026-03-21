@@ -6,40 +6,6 @@ The core objective of this project is to improve the **security and fairness** o
 Our system uses **Artificial Intelligence** to monitor **video, audio, and user behaviour** in real-time. It detects suspicious activities (such as mobile phones, multiple people, abnormal head/eye movements, or background voices) and calculates a **Risk Score** by combining multiple signals, which helps severely reduce false alarms. The result is a secure, reliable, and ethical AI interview monitoring system that ensures fair evaluation and builds trust in online assessments.
 
 ---
-
-## 🔬 AI Dashboard Framework (AI Pipeline)
-
-### 📹 1. Object Detection (`YOLOv8`)
-*   **Purpose**: Detect unfair activities using the camera in real-time.
-*   **Action**: Identifies suspicious objects (mobile phones, restricted items) and multiple persons in the frame. Helps the system verify candidate transparency.
-
-### 👁️ 2. Face Movement & Pose Tracking (`OpenCV`)
-*   **Purpose**: Track candidate behaviour and posture with webcam.
-*   **Action**: Tracks face position, head turns, and posture to catch excessive looking away without flagging normal human movement errors.
-
-### 🎙️ 3. Speech-to-Text (`Whisper Model`)
-*   **Purpose**: Monitor spoken content during the interview stream.
-*   **Action**: Converts live microphone audio to text. Detects background voices and captures content for later answer evaluation.
-
-### 📝 4. Intelligent Answer Evaluation (`GPT / LLM` - Optional)
-*   **Purpose**: Score interview answers intelligently and accurately.
-*   **Action**: Generates a relevance score by comparing spoken answers against expected responses (context over template matches).
-
----
-
-## 🏗️ Core Engineering Stack
-
-### 💻 Frontend (`React`, `HTML/CSS`, `WebRTC`)
-*   **Framework Interface**: Smart proctoring dashboard panel aggregates overlay metrics cleanly.
-*   **Media Access**: WebRTC capture nodes capture live micro-panel feeds securely triggers layout.
-
-### ⚙️ Backend & AI Controllers (`FastAPI`, `Python`)
-*   **Pipeline Control**: Connects AI models seamlessly with frontend streams rollout heartbeats triggers aggregate.
-*   **Risk Evaluation triggers aggregates metrics setup setup:**: Central scoring aggregation timeout handles rollbacks setup rollback setup indices accurately.
-
-### 📊 DB Structure (`PostgreSQL`)
-*   **Data Aggregation setup trackers setup**: candidate information trackers logs aggregated rollback triggers setup layout configuration accurate setup metrics tracks layout index setup trackers setup metrics tracks layout index setup trackers setup.
-
 ---
 
 ## 👨‍💻 My Role & Contributions (`Harsh Lagwal`)
