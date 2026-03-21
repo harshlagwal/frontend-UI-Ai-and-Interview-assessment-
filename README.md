@@ -44,22 +44,26 @@ Our system uses **Artificial Intelligence** to monitor **video, audio, and user 
 
 ## 👨‍💻 My Role & Contributions (`Harsh Lagwal`)
 
-I primarily owned the **Frontend Development** and **System Integration** to connect client views with Backend processing layers.
+### **🔹 Task 1: UI & WebRTC Streaming**
+*   **Description**: Create the UI for the assessment and interview system and allow mic and camera streaming through the browser.
+*   **Module**: Assessment UI Interface
+*   **Objective**: Design complete frontend for assessment.
+*   **Deliverables**:
+    *   • Domain selection page
+    *   • Question display page
+    *   • Timer display
+    *   • Answer text box
+    *   • Submit button
+    *   • Skip button
+    *   *Standard*: Clean and simple UI.
 
-### **1. Assessment UI Interface Development**
-*   **Design**: Created a clean and simple frontend assessment ecosystem interface setup.
-*   **Features Integrated**:
-    *   **Domain Selection page** Setup aggregates metrics calculation trackers nodes layout metrics rollouts triggers setup rollout heartbeats triggers aggregate streams node layout index setup.
-    *   **Question display page** (Dynamic rollout layout indices tracks overlays metrics layout triggers).
-    *   **Timer display** and central sync rollup trackers node indices setup.
-    *   **Answer text box** and **Submit/Skip actions** setup triggers configuration.
-
-### **2. Frontend-Backend Interface Control**
+### **🔹 Task 2: System Integration**
+*   **Team**: Integration Team 4 – Frontend, Reporting & Data Systems
+*   **Team Objective**: Connect frontend UI and reporting systems with backend modules.
+*   **Task**: Assessment Interface Backend Connection
 *   **Technical Work**:
-    *   Connected frontend React context directly with FastAPI controllers nodes securely triggers rollback configuration setup.
-    *   Implemented full synchronization endpoints triggers configuration aggregates setup setup streams tracers.
-
----
+    *   • Connect frontend UI with FastAPI backend
+    *   • Implement API calls for questions and answers
 
 ## ⚡ Execution Instructions
 
